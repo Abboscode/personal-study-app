@@ -1,0 +1,22 @@
+{
+  "schema_version": "1.0",
+  "subject": "Electronics for Embedded Systems",
+  "section": "Memory Fundamentals, Organization & Interface",
+  "source": "efes_memories",
+  "questions": [
+    {
+      "external_id": "efes-memories-001",
+      "type": "problem",
+      "question": "A digital memory is organized as **4K × 9**. Determine the total size in bits and bytes, the number of address bits, and the valid address range. Then explain why the organization is valid even though 9 is not a power of 2.",
+      "answer": "The memory contains:\n\n\\[\nN_{words}=4K=4096=2^{12}\n\\]\n\nand each word has:\n\n\\[\nn_{bits}=9\n\\]\n\nSo:\n\n\\[\nSIZE=N_{words}\\times n_{bits}=4096\\times9=36864\\text{ bits}\n\\]\n\nIn bytes:\n\n\\[\n36864/8=4608\\text{ bytes}=4.5\\text{ Kbytes}\n\\]\n\nSince:\n\n\\[\n4096=2^{12}\n\\]\n\nthe address requires:\n\n\\[\nk=\\log_2(4096)=12\n\\]\n\nbits.\n\nThe valid addresses are:\n\n\\[\n0\\rightarrow4095\n\\]\n\nbecause:\n\n\\[\nA_{last}=N_{words}-1\n\\]\n\nThe organization is valid because the **number of words must be a power of 2**, but the **word width does not need to be a power of 2**.",
+      "difficulty_level": 2,
+      "tags": [
+        "memory",
+        "memory-organization",
+        "addressing",
+        "capacity"
+      ],
+      "source_page": null
+    }
+  ]
+}

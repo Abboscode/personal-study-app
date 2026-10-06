@@ -4,7 +4,10 @@ import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useEffect, useState } from "react";
 
-import { Markdown } from "@/components/Markdown";
+import {
+  SectionQuestionList,
+  type SectionQuestion,
+} from "@/components/SectionQuestionList";
 
 type Section = {
   id: number;
@@ -16,20 +19,10 @@ type Section = {
   due_count: number;
 };
 
-type Question = {
-  id: number;
-  external_id: string;
-  question_type: string;
-  question: string;
-  difficulty_level: number;
-  tags: string[];
-  is_due: boolean;
-};
-
 export default function SectionPage() {
   const { id } = useParams<{ id: string }>();
   const [section, setSection] = useState<Section | null>(null);
-  const [questions, setQuestions] = useState<Question[]>([]);
+  const [questions, setQuestions] = useState<SectionQuestion[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
@@ -105,28 +98,7 @@ export default function SectionPage() {
         <div><p className="eyebrow">QUESTION BANK</p><h2>Questions</h2></div>
         <span>{questions.length} total</span>
       </div>
-      {questions.length === 0 ? (
-        <section className="empty-state"><h2>No questions yet</h2></section>
-      ) : (
-        <ol className="question-list">
-          {questions.map((question) => (
-            <li className="question-list-item" key={question.id}>
-              <div className="question-list-meta">
-                <span>{question.question_type}</span>
-                <span>Difficulty {question.difficulty_level}</span>
-                {question.is_due && <span className="due-badge">Due</span>}
-              </div>
-              <Markdown>{question.question}</Markdown>
-              {question.tags.length > 0 && (
-                <div className="tag-list">
-                  {question.tags.map((tag) => <span key={tag}>#{tag}</span>)}
-                </div>
-              )}
-            </li>
-          ))}
-        </ol>
-      )}
+      <SectionQuestionList questions={questions} />
     </div>
   );
 }
-

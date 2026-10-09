@@ -83,9 +83,10 @@ def test_import_creates_subject_section_question_and_state(
             "id": section.id,
             "name": "Memory Fundamentals, Organization & Interface",
             "description": None,
-            "question_count": 1,
-            "due_count": 1,
-        }
+                "question_count": 1,
+                "due_count": 1,
+                "note_count": 0,
+            }
     ]
     section_detail = get_section(section.id, db)
     assert section_detail["subject_name"] == "Electronics for Embedded Systems"
@@ -173,9 +174,16 @@ def test_question_edit_and_delete(
     )
     assert response["question"] == "Updated question"
     assert response["tags"] == ["updated"]
+    rate_question(db, question_id, "good")
+    assert db.scalar(select(func.count(ReviewHistory.id))) == 1
     delete_question(question_id, db)
     assert db.get(Question, question_id) is None
     assert db.scalar(select(func.count(ReviewState.id))) == 0
+    assert db.scalar(select(func.count(ReviewHistory.id))) == 0
+
+    with pytest.raises(HTTPException) as missing:
+        delete_question(question_id, db)
+    assert missing.value.status_code == 404
 
 
 def test_due_question_and_good_rating_create_history_and_update_state(
@@ -185,6 +193,8 @@ def test_due_question_and_good_rating_create_history_and_update_state(
     question = db.scalar(select(Question))
     assert question is not None
     previous_due = question.review_state.due_at
+    if previous_due.tzinfo is None:  # SQLite drops timezone information.
+        previous_due = previous_due.replace(tzinfo=timezone.utc)
 
     due = due_questions(limit=50, db=db)
     assert len(due) == 1

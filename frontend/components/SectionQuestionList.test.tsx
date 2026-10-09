@@ -62,4 +62,19 @@ describe("SectionQuestionList", () => {
     expanded = toggleExpandedQuestion(expanded, 7);
     expect([...expanded]).toEqual([8]);
   });
+
+  it("renders an independent delete action for every question", () => {
+    const html = renderToStaticMarkup(
+      <SectionQuestionList
+        deletingQuestionIds={new Set([8])}
+        onDeleteQuestion={() => undefined}
+        questions={questions}
+      />,
+    );
+
+    expect(html.match(/Delete question/g)).toHaveLength(3);
+    expect(html).toContain("Deleting…");
+    expect(html).toContain('aria-label="Delete question 1"');
+    expect(html).toContain('aria-label="Delete question 2"');
+  });
 });

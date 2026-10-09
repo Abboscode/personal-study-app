@@ -19,6 +19,14 @@ services:
     environment:
       DATABASE_URL: postgresql+psycopg://study:study@db:5432/study
       CORS_ORIGINS: http://localhost:3000
+      OPENROUTER_API_KEY: ${OPENROUTER_API_KEY:-}
+      OPENROUTER_MODEL: ${OPENROUTER_MODEL:-anthropic/claude-haiku-5.5}
+      OPENROUTER_BASE_URL: ${OPENROUTER_BASE_URL:-https://openrouter.ai/api/v1}
+      OPENROUTER_TIMEOUT_SECONDS: ${OPENROUTER_TIMEOUT_SECONDS:-300}
+      OPENROUTER_MAX_COMPLETION_TOKENS: ${OPENROUTER_MAX_COMPLETION_TOKENS:-32000}
+      LECTURE_STORAGE_PATH: /data/lecture_uploads
+    volumes:
+      - lecture_uploads:/data/lecture_uploads
     ports:
       - "8000:8000"
     depends_on:
@@ -36,6 +44,7 @@ services:
     build: ./frontend
     environment:
       BACKEND_URL: http://backend:8000
+      API_PROXY_TIMEOUT_MS: ${API_PROXY_TIMEOUT_MS:-330000}
     ports:
       - "0.0.0.0:3000:3000"
     depends_on:
@@ -52,3 +61,5 @@ services:
 volumes:
   study_postgres_data:
     name: personal_study_postgres_data
+  lecture_uploads:
+    name: personal_study_lecture_uploads

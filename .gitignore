@@ -7,4 +7,6 @@ frontend/.next/
 *.tsbuildinfo
 .env
 .env.*
+!.env.example
 backups/
+backend/lecture_uploads/

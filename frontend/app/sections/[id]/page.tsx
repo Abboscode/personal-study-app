@@ -9,6 +9,8 @@ import {
   type SectionQuestion,
 } from "@/components/SectionQuestionList";
 
+import { deleteQuestionRequest, withoutQuestion } from "./questionDeletion";
+
 type Section = {
   id: number;
   name: string;
@@ -17,6 +19,7 @@ type Section = {
   subject_name: string;
   question_count: number;
   due_count: number;
+  note_count: number;
 };
 
 export default function SectionPage() {
@@ -25,6 +28,11 @@ export default function SectionPage() {
   const [questions, setQuestions] = useState<SectionQuestion[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [deleteError, setDeleteError] = useState("");
+  const [deleteNotice, setDeleteNotice] = useState("");
+  const [deletingQuestionIds, setDeletingQuestionIds] = useState<Set<number>>(
+    () => new Set(),
+  );
 
   useEffect(() => {
     const controller = new AbortController();
@@ -54,6 +62,32 @@ export default function SectionPage() {
     return () => controller.abort();
   }, [id]);
 
+  async function deleteQuestion(question: SectionQuestion) {
+    setDeleteError("");
+    setDeleteNotice("");
+    setDeletingQuestionIds((current) => new Set(current).add(question.id));
+    try {
+      await deleteQuestionRequest(question.id);
+      setQuestions((current) => withoutQuestion(current, question.id));
+      setSection((current) => current && ({
+        ...current,
+        question_count: Math.max(0, current.question_count - 1),
+        due_count: Math.max(0, current.due_count - (question.is_due ? 1 : 0)),
+      }));
+      setDeleteNotice("Question deleted.");
+    } catch (reason) {
+      setDeleteError(
+        reason instanceof Error ? reason.message : "Could not delete the question",
+      );
+    } finally {
+      setDeletingQuestionIds((current) => {
+        const next = new Set(current);
+        next.delete(question.id);
+        return next;
+      });
+    }
+  }
+
   if (loading) return <div className="page-shell"><p className="muted">Loading section…</p></div>;
   if (error || !section) {
     return (
@@ -82,6 +116,7 @@ export default function SectionPage() {
           <dl className="header-counts">
             <div><dt>Questions</dt><dd>{section.question_count}</dd></div>
             <div><dt>Due now</dt><dd>{section.due_count}</dd></div>
+            <div><dt>Notes</dt><dd>{section.note_count}</dd></div>
           </dl>
           <button
             className="primary-button"
@@ -91,6 +126,7 @@ export default function SectionPage() {
           >
             Practice section
           </button>
+          <Link className="secondary-button" href={`/sections/${id}/notes`}>Browse notes</Link>
         </div>
       </header>
 
@@ -98,7 +134,13 @@ export default function SectionPage() {
         <div><p className="eyebrow">QUESTION BANK</p><h2>Questions</h2></div>
         <span>{questions.length} total</span>
       </div>
-      <SectionQuestionList questions={questions} />
+      {deleteError && <p className="error" role="alert">{deleteError}</p>}
+      {deleteNotice && <p className="success-notice" role="status">{deleteNotice}</p>}
+      <SectionQuestionList
+        deletingQuestionIds={deletingQuestionIds}
+        onDeleteQuestion={(question) => void deleteQuestion(question)}
+        questions={questions}
+      />
     </div>
   );
 }

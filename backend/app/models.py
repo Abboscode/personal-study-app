@@ -47,6 +47,38 @@ class Subject(TimestampMixin, Base):
     sections: Mapped[list[Section]] = relationship(
         back_populates="subject", cascade="all, delete-orphan"
     )
+    lecture_sources: Mapped[list[LectureSource]] = relationship(
+        back_populates="subject", cascade="all, delete-orphan"
+    )
+    notes: Mapped[list[Note]] = relationship(
+        back_populates="subject", cascade="all, delete-orphan"
+    )
+
+
+class LectureSource(Base):
+    __tablename__ = "lecture_sources"
+    __table_args__ = (
+        UniqueConstraint(
+            "subject_id", "file_hash", name="uq_lecture_source_subject_hash"
+        ),
+    )
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    subject_id: Mapped[int] = mapped_column(
+        ForeignKey("subjects.id", ondelete="CASCADE"), nullable=False, index=True
+    )
+    original_filename: Mapped[str] = mapped_column(String(255), nullable=False)
+    stored_filename: Mapped[str] = mapped_column(String(255), nullable=False)
+    file_path: Mapped[str] = mapped_column(String(512), nullable=False)
+    file_hash: Mapped[str] = mapped_column(String(64), nullable=False)
+    page_count: Mapped[int | None] = mapped_column(Integer)
+    uploaded_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now(), nullable=False
+    )
+
+    subject: Mapped[Subject] = relationship(back_populates="lecture_sources")
+    questions: Mapped[list[Question]] = relationship(back_populates="source_document")
+    notes: Mapped[list[Note]] = relationship(back_populates="source_document")
 
 
 class Section(TimestampMixin, Base):
@@ -62,6 +94,9 @@ class Section(TimestampMixin, Base):
 
     subject: Mapped[Subject] = relationship(back_populates="sections")
     questions: Mapped[list[Question]] = relationship(
+        back_populates="section", cascade="all, delete-orphan"
+    )
+    notes: Mapped[list[Note]] = relationship(
         back_populates="section", cascade="all, delete-orphan"
     )
 
@@ -97,14 +132,55 @@ class Question(TimestampMixin, Base):
     difficulty_level: Mapped[int] = mapped_column(Integer, nullable=False, default=2)
     source: Mapped[str | None] = mapped_column(String(255))
     source_page: Mapped[str | None] = mapped_column(String(100))
+    source_document_id: Mapped[int | None] = mapped_column(
+        ForeignKey("lecture_sources.id", ondelete="SET NULL"),
+        nullable=True,
+        index=True,
+    )
 
     section: Mapped[Section] = relationship(back_populates="questions")
+    source_document: Mapped[LectureSource | None] = relationship(
+        back_populates="questions"
+    )
     tags: Mapped[list[Tag]] = relationship(secondary=question_tags, back_populates="questions")
     review_state: Mapped[ReviewState] = relationship(
         back_populates="question", cascade="all, delete-orphan", uselist=False
     )
     review_history: Mapped[list[ReviewHistory]] = relationship(
         back_populates="question", cascade="all, delete-orphan"
+    )
+
+
+class Note(TimestampMixin, Base):
+    __tablename__ = "notes"
+    __table_args__ = (
+        CheckConstraint(
+            "note_type IN ('formula', 'theorem', 'concept', 'procedure')",
+            name="ck_note_type",
+        ),
+    )
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    subject_id: Mapped[int] = mapped_column(
+        ForeignKey("subjects.id", ondelete="CASCADE"), nullable=False, index=True
+    )
+    section_id: Mapped[int] = mapped_column(
+        ForeignKey("sections.id", ondelete="CASCADE"), nullable=False, index=True
+    )
+    source_document_id: Mapped[int | None] = mapped_column(
+        ForeignKey("lecture_sources.id", ondelete="SET NULL"),
+        nullable=True,
+        index=True,
+    )
+    source_page: Mapped[str | None] = mapped_column(String(100))
+    note_type: Mapped[str] = mapped_column(String(20), nullable=False)
+    title: Mapped[str] = mapped_column(String(255), nullable=False)
+    content_markdown: Mapped[str] = mapped_column(Text, nullable=False)
+
+    subject: Mapped[Subject] = relationship(back_populates="notes")
+    section: Mapped[Section] = relationship(back_populates="notes")
+    source_document: Mapped[LectureSource | None] = relationship(
+        back_populates="notes"
     )
 
 

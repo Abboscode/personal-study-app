@@ -18,6 +18,8 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
           <nav aria-label="Main navigation">
             <Link href="/">Dashboard</Link>
             <Link href="/import">Import</Link>
+            <Link href="/generate">Generate</Link>
+            <Link href="/notes/generate">Notes</Link>
             <Link className="nav-review" href="/review">Start review</Link>
           </nav>
         </header>
@@ -26,4 +28,3 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
     </html>
   );
 }
-

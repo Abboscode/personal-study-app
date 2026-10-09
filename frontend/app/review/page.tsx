@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
 import { Markdown } from "@/components/Markdown";
+import { SourceDocumentReference, SourceReference } from "@/components/SourceReference";
 
 type Rating = "again" | "hard" | "good" | "easy";
 type DueQuestion = {
@@ -13,6 +14,9 @@ type DueQuestion = {
   question: string;
   answer: string;
   tags: string[];
+  source: string | null;
+  source_page: string | null;
+  source_document: SourceDocumentReference | null;
 };
 
 export default function ReviewPage() {
@@ -98,6 +102,12 @@ export default function ReviewPage() {
             <p className="card-label">Question</p>
             <Markdown>{current.question}</Markdown>
           </section>
+          <SourceReference
+            compact
+            sourceDocument={current.source_document}
+            sourcePage={current.source_page}
+            sourceText={current.source}
+          />
 
           {!revealed ? (
             <button className="show-answer" onClick={() => setRevealed(true)}>Show answer</button>
@@ -121,4 +131,3 @@ export default function ReviewPage() {
     </div>
   );
 }
-

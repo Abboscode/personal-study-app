@@ -43,4 +43,23 @@ SIZE=N_{words}\times n_{bits}
     expect(html).not.toContain("<script>");
     expect(html).toContain("&lt;script&gt;");
   });
+
+  it("renders double-escaped model line breaks as Markdown paragraphs", () => {
+    const markdown = String.raw`Each b_transport call adds 10 ns to delay, and the initiator then calls wait(delay).\n\n**Timing:** delay is declared inside the loop, so it is reset for each transaction.`;
+    const html = renderToStaticMarkup(<Markdown>{markdown}</Markdown>);
+
+    expect(html).toContain(
+      "<p>Each b_transport call adds 10 ns to delay, and the initiator then calls wait(delay).</p>",
+    );
+    expect(html).toContain("<p><strong>Timing:</strong>");
+    expect(html).not.toContain(String.raw`\n`);
+  });
+
+  it("does not reinterpret a lone programming escape as a line break", () => {
+    const html = renderToStaticMarkup(
+      <Markdown>{String.raw`Use the C++ escape \n for a newline.`}</Markdown>,
+    );
+
+    expect(html).toContain(String.raw`\n`);
+  });
 });

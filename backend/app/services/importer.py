@@ -4,7 +4,15 @@ from fsrs import Card
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from app.models import ImportBatch, Question, ReviewState, Section, Subject, Tag
+from app.models import (
+    ImportBatch,
+    LectureSource,
+    Question,
+    ReviewState,
+    Section,
+    Subject,
+    Tag,
+)
 from app.schemas import ImportPayload, ImportSummary
 
 
@@ -25,13 +33,19 @@ def _new_review_state() -> ReviewState:
 
 
 def import_questions(
-    db: Session, payload: ImportPayload, filename: str
+    db: Session,
+    payload: ImportPayload,
+    filename: str,
+    source_document: LectureSource | None = None,
 ) -> ImportSummary:
     subject = db.scalar(select(Subject).where(Subject.name == payload.subject))
     if subject is None:
         subject = Subject(name=payload.subject)
         db.add(subject)
         db.flush()
+
+    if source_document is not None and source_document.subject_id != subject.id:
+        raise ValueError("Lecture source does not belong to the imported subject")
 
     section = db.scalar(
         select(Section).where(
@@ -83,6 +97,9 @@ def import_questions(
             difficulty_level=item.difficulty_level,
             source=payload.source,
             source_page=None if item.source_page is None else str(item.source_page),
+            source_document_id=(
+                source_document.id if source_document is not None else None
+            ),
             tags=question_tags,
             review_state=_new_review_state(),
         )
@@ -110,4 +127,3 @@ def import_questions(
         subject_id=subject.id,
         section_id=section.id,
     )
-
